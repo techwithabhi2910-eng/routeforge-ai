@@ -2,8 +2,14 @@ import React from 'react';
 import { Zap, DollarSign, FolderGit2, Check, ArrowRight, Sparkles, Clock, Calendar } from 'lucide-react';
 import { ROUTE_CONFIGS } from '../data/careerData';
 
-export default function CompareSection({ selectedRouteId, onSelectRoute }) {
-  const routes = Object.values(ROUTE_CONFIGS);
+export default function CompareSection({
+  selectedRouteId,
+  onSelectRoute,
+  routeConfigs = ROUTE_CONFIGS,
+  isLiveGenerated = false,
+  roadmapNote = ''
+}) {
+  const routes = Object.values(routeConfigs);
 
   return (
     <section
@@ -32,6 +38,14 @@ export default function CompareSection({ selectedRouteId, onSelectRoute }) {
           >
             <span style={{ color: 'var(--accent-orange)' }}>//</span>
             <span>SECTION 03 — ROUTE ARBITRAGE</span>
+            {isLiveGenerated && (
+              <span
+                className="tech-tag active"
+                style={{ fontSize: '8.5px', padding: '1px 6px', color: '#00ff88', borderColor: 'rgba(0, 255, 136, 0.4)' }}
+              >
+                LIVE GEMINI SYNTHESIS
+              </span>
+            )}
           </div>
 
           <h2
@@ -59,6 +73,24 @@ export default function CompareSection({ selectedRouteId, onSelectRoute }) {
             Choose the path that fits your priorities, resources, and preferred way to learn.
             Each route structures identical core competencies into distinct execution sequences.
           </p>
+
+          {roadmapNote && (
+            <div
+              style={{
+                marginTop: '14px',
+                padding: '8px 12px',
+                background: 'rgba(255, 106, 0, 0.08)',
+                borderLeft: '2px solid var(--accent-orange)',
+                borderRadius: 'var(--radius-xs)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '11px',
+                color: 'var(--text-primary)',
+                lineHeight: 1.4
+              }}
+            >
+              <strong style={{ color: 'var(--accent-orange)' }}>// AI NOTE:</strong> {roadmapNote}
+            </div>
+          )}
         </div>
 
         {/* 3 Routes Comparison Grid */}

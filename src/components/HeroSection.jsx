@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, Sparkles, Terminal, ShieldCheck, CheckCircle2, Zap, GitCommit, ChevronRight } from 'lucide-react';
+import { ArrowUpRight, Terminal, ChevronRight } from 'lucide-react';
 import { INITIAL_ROLES } from '../data/careerData';
+import LumiMascot from './LumiMascot';
 
 export default function HeroSection({
   selectedRole,
@@ -8,11 +9,70 @@ export default function HeroSection({
   experienceLevel,
   onChangeExperienceLevel,
   onGenerateRoadmap,
-  readinessScore
+  readinessScore,
+  mascotState: externalMascotState,
+  mascotMessage: externalMascotMessage,
+  onTriggerMascotReaction: externalOnTriggerMascotReaction,
+  isLoadingRoadmap = false,
+  roadmapError = null,
+  onRetryRoadmap,
+  isLiveGenerated = false
 }) {
   const [customRoleInput, setCustomRoleInput] = useState('');
   const [activeStagePill, setActiveStagePill] = useState(0);
   const [coords, setCoords] = useState({ x: 42.88, y: 77.12 });
+  const [weeklyHours, setWeeklyHours] = useState(20);
+  const [budgetInr, setBudgetInr] = useState(5000);
+  const [internalMascotState, setInternalMascotState] = useState('neutral');
+  const [internalMascotMessage, setInternalMascotMessage] = useState('Observing career objectives. Select a target role.');
+
+  const isControlled = externalMascotState !== undefined;
+  const currentMascotState = isControlled ? externalMascotState : internalMascotState;
+  const currentMascotMessage = isControlled ? externalMascotMessage : internalMascotMessage;
+
+  const setMascotReaction = (st, msg, duration = 0) => {
+    if (externalOnTriggerMascotReaction) {
+      externalOnTriggerMascotReaction(st, msg, duration);
+    } else {
+      setInternalMascotState(st);
+      if (msg) setInternalMascotMessage(msg);
+      if (duration > 0) {
+        setTimeout(() => {
+          setInternalMascotState('neutral');
+          setInternalMascotMessage('Telemetry active. Select a target role.');
+        }, duration);
+      }
+    }
+  };
+
+  // React to role change
+  const handleSelectRoleWithMascot = (role) => {
+    onSelectRole(role);
+    setMascotReaction('thinking', `Synthesizing requirements for ${role.title}...`, 1200);
+  };
+
+  // React to experience level change
+  const handleChangeExperienceWithMascot = (lvl) => {
+    onChangeExperienceLevel(lvl);
+    setMascotReaction('working', `Recalibrating curriculum for ${lvl} level...`, 1000);
+  };
+
+  // React to roadmap generation
+  const handleTriggerForge = (e) => {
+    if (e) e.preventDefault();
+    if (isLoadingRoadmap) return;
+    if (onGenerateRoadmap) {
+      onGenerateRoadmap({
+        targetRole: selectedRole.title,
+        weeklyHours,
+        budgetInr
+      });
+    }
+  };
+
+  // Derive active mascot state (celebrates automatically when readiness hits 100%)
+  const activeMascotState = readinessScore >= 100 ? 'celebrate' : currentMascotState;
+  const activeMascotMessage = readinessScore >= 100 ? 'Career Readiness: 100%! All milestones verified.' : currentMascotMessage;
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -24,20 +84,32 @@ export default function HeroSection({
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  const handleCustomInputChange = (e) => {
+    const val = e.target.value;
+    setCustomRoleInput(val);
+    if (val.trim()) {
+      setMascotReaction('searching', `Searching skill graph for "${val.trim()}"...`, 0);
+    } else {
+      setMascotReaction('neutral', 'Observing career objectives. Select a target role.', 0);
+    }
+  };
+
   const handleCustomSubmit = (e) => {
     e.preventDefault();
     if (!customRoleInput.trim()) return;
+    const title = customRoleInput.trim();
     onSelectRole({
       id: 'custom-' + Date.now(),
-      title: customRoleInput.trim(),
+      title,
       category: 'Custom Target Role',
-      description: `Tailored reverse-engineering path synthesized for ${customRoleInput.trim()}.`,
+      description: `Tailored reverse-engineering path synthesized for ${title}.`,
       baseReadiness: 35,
       estTotalHours: 460,
       salaryBenchmark: '$195k — $275k / yr',
       demandIndex: 'High'
     });
     setCustomRoleInput('');
+    setMascotReaction('happy', `Custom target locked: ${title}!`, 2500);
   };
 
   return (
@@ -49,7 +121,7 @@ export default function HeroSection({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: '50px 0 30px',
+        padding: 'clamp(36px, 5vw, 64px) 0 clamp(24px, 4vw, 40px)',
         overflow: 'hidden'
       }}
     >
@@ -68,14 +140,14 @@ export default function HeroSection({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 0.95fr)',
-            gap: '48px',
+            gridTemplateColumns: 'minmax(0, 1.28fr) minmax(0, 0.92fr)',
+            gap: 'clamp(28px, 4vw, 56px)',
             alignItems: 'center'
           }}
           className="hero-grid"
         >
           {/* Left Column: Typography & Form */}
-          <div style={{ position: 'relative', zIndex: 10 }}>
+          <div className="hero-left-col" style={{ position: 'relative', zIndex: 10, minWidth: 0 }}>
             {/* Monospace Eyebrow */}
             <div
               style={{
@@ -86,7 +158,7 @@ export default function HeroSection({
                 fontSize: '11px',
                 letterSpacing: '0.14em',
                 color: 'var(--text-secondary)',
-                marginBottom: '20px'
+                marginBottom: '18px'
               }}
             >
               <div
@@ -101,31 +173,25 @@ export default function HeroSection({
               <span>CAREER INTELLIGENCE / 001</span>
             </div>
 
-            {/* Large 3-Line Editorial Headline */}
-            <h1
-              style={{
-                fontFamily: 'var(--font-editorial)',
-                fontSize: 'clamp(44px, 5.8vw, 76px)',
-                fontWeight: 900,
-                lineHeight: 0.96,
-                letterSpacing: '-0.04em',
-                textTransform: 'uppercase',
-                marginBottom: '24px'
-              }}
-            >
-              <div style={{ color: 'var(--text-primary)' }}>YOUR DREAM.</div>
-              <div style={{ color: 'var(--text-primary)' }}>REVERSE-</div>
-              <div style={{ color: 'var(--accent-orange)' }}>ENGINEERED.</div>
+            {/* Responsive Editorial Headline */}
+            <h1 className="hero-headline">
+              <span className="hero-headline-line1" style={{ color: 'var(--text-primary)', display: 'block' }}>
+                YOUR DREAM.
+              </span>
+              <span className="hero-headline-accent-row">
+                <span style={{ color: 'var(--text-primary)' }}>REVERSE-</span>
+                <span style={{ color: 'var(--accent-orange)' }}>ENGINEERED.</span>
+              </span>
             </h1>
 
             {/* Supporting Copy */}
             <p
               style={{
                 fontSize: '15px',
-                lineHeight: 1.6,
+                lineHeight: 1.65,
                 color: 'var(--text-secondary)',
-                maxWidth: '480px',
-                marginBottom: '32px'
+                maxWidth: '520px',
+                marginBottom: '28px'
               }}
             >
               Start with the role you want. Discover the skills, projects, and milestones that can
@@ -134,27 +200,34 @@ export default function HeroSection({
 
             {/* CTA Buttons */}
             <div
+              className="hero-cta-group"
               style={{
                 display: 'flex',
                 flexWrap: 'wrap',
                 alignItems: 'center',
-                gap: '16px',
-                marginBottom: '36px'
+                gap: '14px',
+                marginBottom: '32px'
               }}
             >
               <button
                 type="button"
-                onClick={onGenerateRoadmap}
-                className="tech-btn primary"
-                style={{ padding: '12px 24px', fontSize: '12px' }}
+                onClick={handleTriggerForge}
+                disabled={isLoadingRoadmap}
+                className="tech-btn primary hero-btn-primary"
+                style={{
+                  padding: '12px 22px',
+                  fontSize: '12px',
+                  opacity: isLoadingRoadmap ? 0.75 : 1,
+                  cursor: isLoadingRoadmap ? 'wait' : 'pointer'
+                }}
               >
-                <span>BUILD MY ROADMAP</span>
+                <span>{isLoadingRoadmap ? 'SYNTHESIZING ROADMAP...' : isLiveGenerated ? 'RE-FORGE ROADMAP' : 'BUILD MY ROADMAP'}</span>
                 <ArrowUpRight size={15} />
               </button>
 
               <a
                 href="#section-build"
-                className="tech-btn"
+                className="tech-btn hero-btn-secondary"
                 style={{ padding: '12px 20px', fontSize: '12px' }}
               >
                 <span>EXPLORE A SAMPLE PATH</span>
@@ -198,11 +271,11 @@ export default function HeroSection({
                 <span
                   style={{
                     fontFamily: 'var(--font-mono)',
-                    fontSize: '9.5px',
-                    color: 'var(--accent-orange)'
+                    fontSize: '9px',
+                    color: isLiveGenerated ? '#00ff88' : 'var(--accent-orange)'
                   }}
                 >
-                  SYSTEM READY
+                  {isLiveGenerated ? 'LIVE GEMINI ENGINE' : 'SYSTEM READY'}
                 </span>
               </div>
 
@@ -226,7 +299,7 @@ export default function HeroSection({
                     <button
                       key={role.id}
                       type="button"
-                      onClick={() => onSelectRole(role)}
+                      onClick={() => handleSelectRoleWithMascot(role)}
                       style={{
                         fontFamily: 'var(--font-mono)',
                         fontSize: '11px',
@@ -258,7 +331,7 @@ export default function HeroSection({
                   type="text"
                   placeholder="Or type custom role: e.g. Autonomous AI Lead"
                   value={customRoleInput}
-                  onChange={(e) => setCustomRoleInput(e.target.value)}
+                  onChange={handleCustomInputChange}
                   style={{
                     flex: 1,
                     background: 'rgba(8, 8, 8, 0.7)',
@@ -282,17 +355,9 @@ export default function HeroSection({
                 </button>
               </form>
 
-              {/* Experience Level & Generate Trigger */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '12px'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {/* Experience Level */}
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                   <span
                     style={{
                       fontFamily: 'var(--font-mono)',
@@ -300,17 +365,23 @@ export default function HeroSection({
                       color: 'var(--text-muted)'
                     }}
                   >
-                    EXPERIENCE:
+                    EXPERIENCE LEVEL:
                   </span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--accent-orange)' }}>
+                    {experienceLevel}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
                   {['Junior / Switcher', 'Mid-Level', 'Senior'].map((lvl) => (
                     <button
                       key={lvl}
                       type="button"
-                      onClick={() => onChangeExperienceLevel(lvl)}
+                      onClick={() => handleChangeExperienceWithMascot(lvl)}
                       style={{
+                        flex: 1,
                         fontFamily: 'var(--font-mono)',
                         fontSize: '9.5px',
-                        padding: '3px 7px',
+                        padding: '4px 6px',
                         borderRadius: 'var(--radius-xs)',
                         border:
                           experienceLevel === lvl
@@ -319,7 +390,7 @@ export default function HeroSection({
                         background:
                           experienceLevel === lvl
                             ? 'rgba(255, 106, 0, 0.2)'
-                            : 'transparent',
+                            : 'rgba(20, 19, 17, 0.6)',
                         color: experienceLevel === lvl ? '#fff' : 'var(--text-muted)',
                         cursor: 'pointer'
                       }}
@@ -328,17 +399,147 @@ export default function HeroSection({
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Weekly Study Hours & Budget Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+                {/* Weekly Study Hours */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      WEEKLY HOURS:
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--accent-orange)' }}>
+                      {weeklyHours}h/wk
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {[10, 15, 20, 30].map((h) => (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() => setWeeklyHours(h)}
+                        style={{
+                          flex: 1,
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '9px',
+                          padding: '3px 0',
+                          borderRadius: 'var(--radius-xs)',
+                          border: weeklyHours === h ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
+                          background: weeklyHours === h ? 'rgba(255, 106, 0, 0.2)' : 'rgba(20, 19, 17, 0.6)',
+                          color: weeklyHours === h ? '#fff' : 'var(--text-muted)',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {h}h
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Learning Budget (INR) */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      BUDGET (INR):
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--accent-orange)' }}>
+                      {budgetInr === 0 ? '₹0' : `₹${budgetInr >= 1000 ? `${budgetInr / 1000}k` : budgetInr}`}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {[
+                      { val: 0, label: '₹0' },
+                      { val: 5000, label: '₹5k' },
+                      { val: 15000, label: '₹15k' },
+                      { val: 50000, label: '₹50k' }
+                    ].map((b) => (
+                      <button
+                        key={b.val}
+                        type="button"
+                        onClick={() => setBudgetInr(b.val)}
+                        style={{
+                          flex: 1,
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '9px',
+                          padding: '3px 0',
+                          borderRadius: 'var(--radius-xs)',
+                          border: budgetInr === b.val ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
+                          background: budgetInr === b.val ? 'rgba(255, 106, 0, 0.2)' : 'rgba(20, 19, 17, 0.6)',
+                          color: budgetInr === b.val ? '#fff' : 'var(--text-muted)',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button & Live Status */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px'
+                }}
+              >
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)' }}>
+                  {isLiveGenerated ? '● 3 ROUTES SYNCED WITH GEMINI' : '● READY TO FORGE'}
+                </div>
 
                 <button
                   type="button"
-                  onClick={onGenerateRoadmap}
+                  onClick={handleTriggerForge}
+                  disabled={isLoadingRoadmap}
                   className="tech-btn primary sm"
-                  style={{ gap: '4px' }}
+                  style={{
+                    gap: '4px',
+                    opacity: isLoadingRoadmap ? 0.75 : 1,
+                    cursor: isLoadingRoadmap ? 'wait' : 'pointer'
+                  }}
                 >
-                  <span>FORGE ROADMAP</span>
+                  <span>{isLoadingRoadmap ? 'SYNTHESIZING...' : isLiveGenerated ? 'RE-FORGE ROADMAP' : 'FORGE ROADMAP'}</span>
                   <ChevronRight size={13} />
                 </button>
               </div>
+
+              {/* Error Callout Banner */}
+              {roadmapError && (
+                <div
+                  style={{
+                    marginTop: '12px',
+                    padding: '8px 10px',
+                    background: 'rgba(230, 92, 92, 0.12)',
+                    border: '1px solid rgba(230, 92, 92, 0.4)',
+                    borderRadius: 'var(--radius-xs)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px'
+                  }}
+                >
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#ff6666', lineHeight: 1.3 }}>
+                    ⚠️ {roadmapError}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleTriggerForge}
+                    className="tech-btn sm"
+                    style={{
+                      padding: '2px 8px',
+                      fontSize: '8.5px',
+                      color: '#ff8888',
+                      borderColor: 'rgba(255, 100, 100, 0.4)',
+                      flexShrink: 0
+                    }}
+                  >
+                    RETRY
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -347,59 +548,70 @@ export default function HeroSection({
             style={{
               position: 'relative',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              minHeight: '520px'
+              width: '100%',
+              maxWidth: '420px',
+              margin: '0 auto',
+              minWidth: 0,
+              minHeight: '460px'
             }}
             className="hero-visual-stage"
           >
             {/* Outer Subtle Orbit Ring */}
             <div
-              className="animate-spin-slow"
+              className="animate-spin-slow hero-orbit-ring"
               style={{
                 position: 'absolute',
-                width: '460px',
-                height: '460px',
+                width: '350px',
+                height: '350px',
+                maxWidth: '96%',
+                maxHeight: '96%',
                 borderRadius: '50%',
-                border: '1px dashed rgba(220, 210, 195, 0.1)',
-                pointerEvents: 'none'
+                border: '1px dashed rgba(220, 210, 195, 0.08)',
+                pointerEvents: 'none',
+                zIndex: 1
               }}
             />
 
             {/* Inner Technical Orbit with Ticks */}
             <div
-              className="animate-spin-reverse"
+              className="animate-spin-reverse hero-orbit-ring"
               style={{
                 position: 'absolute',
-                width: '380px',
-                height: '380px',
+                width: '290px',
+                height: '290px',
+                maxWidth: '88%',
+                maxHeight: '88%',
                 borderRadius: '50%',
-                border: '1px solid rgba(255, 106, 0, 0.2)',
-                pointerEvents: 'none'
+                border: '1px solid rgba(255, 106, 0, 0.18)',
+                pointerEvents: 'none',
+                zIndex: 1
               }}
             >
               <div
                 style={{
                   position: 'absolute',
-                  top: '-4px',
+                  top: '-3px',
                   left: '50%',
-                  width: '8px',
-                  height: '8px',
+                  width: '6px',
+                  height: '6px',
                   background: 'var(--accent-orange)',
                   borderRadius: '50%',
-                  boxShadow: '0 0 10px var(--accent-orange)'
+                  boxShadow: '0 0 6px var(--accent-orange)'
                 }}
               />
               <div
                 style={{
                   position: 'absolute',
-                  bottom: '-4px',
+                  bottom: '-3px',
                   left: '50%',
-                  width: '8px',
-                  height: '8px',
+                  width: '6px',
+                  height: '6px',
                   background: 'var(--accent-orange)',
                   borderRadius: '50%',
-                  boxShadow: '0 0 10px var(--accent-orange)'
+                  boxShadow: '0 0 6px var(--accent-orange)'
                 }}
               />
             </div>
@@ -407,16 +619,18 @@ export default function HeroSection({
             {/* Central Career Forge Apparatus */}
             <div
               style={{
-                width: '320px',
-                background: 'rgba(13, 12, 11, 0.94)',
-                border: '1px solid rgba(255, 106, 0, 0.45)',
+                width: '100%',
+                maxWidth: '380px',
+                background: 'rgba(13, 12, 11, 0.96)',
+                border: '1px solid rgba(255, 106, 0, 0.35)',
                 borderRadius: 'var(--radius-sm)',
-                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.9), 0 0 35px rgba(255, 106, 0, 0.15)',
-                padding: '24px',
+                boxShadow: '0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 106, 0, 0.1)',
+                padding: '18px 20px',
                 position: 'relative',
-                zIndex: 20
+                zIndex: 10,
+                boxSizing: 'border-box'
               }}
-              className="tech-corner-box"
+              className="target-forge-panel tech-corner-box"
             >
               {/* Header Telemetry */}
               <div
@@ -425,15 +639,15 @@ export default function HeroSection({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   borderBottom: '1px solid var(--border-subtle)',
-                  paddingBottom: '10px',
-                  marginBottom: '16px'
+                  paddingBottom: '8px',
+                  marginBottom: '12px'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <div
                     style={{
-                      width: '8px',
-                      height: '8px',
+                      width: '6px',
+                      height: '6px',
                       borderRadius: '50%',
                       background: 'var(--accent-orange)',
                       boxShadow: '0 0 6px var(--accent-orange)'
@@ -442,7 +656,7 @@ export default function HeroSection({
                   <span
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: '10.5px',
+                      fontSize: '10px',
                       fontWeight: 600,
                       letterSpacing: '0.08em',
                       color: '#fff'
@@ -455,7 +669,7 @@ export default function HeroSection({
                 <span
                   style={{
                     fontFamily: 'var(--font-mono)',
-                    fontSize: '9.5px',
+                    fontSize: '9px',
                     color: 'var(--accent-orange)'
                   }}
                 >
@@ -463,23 +677,172 @@ export default function HeroSection({
                 </span>
               </div>
 
+              {/* Lumi Mascot Copilot Stage */}
+              <div
+                style={{
+                  padding: '10px 12px',
+                  background: 'rgba(230, 92, 92, 0.06)',
+                  border: '1px solid rgba(230, 92, 92, 0.25)',
+                  borderRadius: 'var(--radius-xs)',
+                  marginBottom: '12px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <LumiMascot
+                    state={activeMascotState}
+                    size={58}
+                    interactive={true}
+                    onStateChange={(next) => {
+                      const msgs = {
+                        neutral: 'Observing your career configuration.',
+                        curious: 'Inspecting career trajectory parameters.',
+                        thinking: 'Evaluating career trajectories...',
+                        searching: 'Scanning industry skill clusters...',
+                        working: 'Compiling curriculum dependencies...',
+                        happy: 'Optimal roadmap computed!',
+                        celebrate: 'All objectives completed!',
+                        confused: 'Anomalous telemetry detected. Recalibrating...'
+                      };
+                      setMascotReaction(next, msgs[next] || `Lumi is now ${next}.`, 3500);
+                    }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '3px'
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '9px',
+                          fontWeight: 700,
+                          color: '#e65c5c',
+                          letterSpacing: '0.08em'
+                        }}
+                      >
+                        LUMI // AI NAVIGATOR
+                      </span>
+                      <span
+                        className="tech-tag"
+                        style={{
+                          fontSize: '7.5px',
+                          padding: '1px 4px',
+                          color: '#e65c5c',
+                          borderColor: 'rgba(230, 92, 92, 0.4)'
+                        }}
+                      >
+                        {activeMascotState.toUpperCase()}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '9.5px',
+                        color: 'var(--text-primary)',
+                        lineHeight: 1.35
+                      }}
+                    >
+                      "{activeMascotMessage}"
+                    </div>
+                  </div>
+                </div>
+
+                {/* State Quick-Selector Chips */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    marginTop: '8px',
+                    paddingTop: '6px',
+                    borderTop: '1px solid rgba(230, 92, 92, 0.15)',
+                    overflowX: 'auto',
+                    scrollbarWidth: 'none'
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '7.5px',
+                      color: 'var(--text-muted)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                      marginRight: '2px',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    STATE:
+                  </span>
+                  {[
+                    { key: 'neutral', label: 'Reset' },
+                    { key: 'curious', label: 'Curious' },
+                    { key: 'thinking', label: 'Thinking' },
+                    { key: 'searching', label: 'Search' },
+                    { key: 'working', label: 'Working' },
+                    { key: 'happy', label: 'Happy' },
+                    { key: 'celebrate', label: 'Celebrate' }
+                  ].map((s) => (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={() => {
+                        const msgs = {
+                          neutral: 'Observing your career configuration.',
+                          curious: 'Inspecting career trajectory parameters.',
+                          thinking: 'Evaluating career trajectories...',
+                          searching: 'Scanning industry skill clusters...',
+                          working: 'Compiling curriculum dependencies...',
+                          happy: 'Optimal roadmap computed!',
+                          celebrate: 'All objectives completed!',
+                          confused: 'Anomalous telemetry detected. Recalibrating...'
+                        };
+                        setMascotReaction(s.key, msgs[s.key] || `State: ${s.key}`, 3500);
+                      }}
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '7.5px',
+                        padding: '2px 4px',
+                        borderRadius: '2px',
+                        border:
+                          activeMascotState === s.key
+                            ? '1px solid #e65c5c'
+                            : '1px solid var(--border-subtle)',
+                        background:
+                          activeMascotState === s.key
+                            ? 'rgba(230, 92, 92, 0.25)'
+                            : 'rgba(20, 19, 17, 0.6)',
+                        color: activeMascotState === s.key ? '#fff' : 'var(--text-muted)',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Target Role Core Badge */}
               <div
                 style={{
-                  padding: '14px',
+                  padding: '10px 12px',
                   background: 'rgba(255, 106, 0, 0.08)',
                   border: '1px solid rgba(255, 106, 0, 0.3)',
                   borderRadius: 'var(--radius-xs)',
-                  marginBottom: '18px'
+                  marginBottom: '12px'
                 }}
               >
                 <div
                   style={{
                     fontFamily: 'var(--font-mono)',
-                    fontSize: '9px',
+                    fontSize: '8.5px',
                     color: 'var(--accent-orange)',
                     letterSpacing: '0.12em',
-                    marginBottom: '4px'
+                    marginBottom: '3px'
                   }}
                 >
                   TARGET ROLE DESTINATION
@@ -487,9 +850,10 @@ export default function HeroSection({
                 <div
                   style={{
                     fontFamily: 'var(--font-editorial)',
-                    fontSize: '18px',
+                    fontSize: '16px',
                     fontWeight: 800,
-                    color: '#fff'
+                    color: '#fff',
+                    lineHeight: 1.2
                   }}
                 >
                   {selectedRole.title}
@@ -497,9 +861,9 @@ export default function HeroSection({
                 <div
                   style={{
                     fontFamily: 'var(--font-mono)',
-                    fontSize: '10px',
+                    fontSize: '9.5px',
                     color: 'var(--text-secondary)',
-                    marginTop: '4px'
+                    marginTop: '3px'
                   }}
                 >
                   {selectedRole.category}
@@ -511,14 +875,14 @@ export default function HeroSection({
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '10px',
-                  marginBottom: '18px'
+                  gap: '8px',
+                  marginBottom: '12px'
                 }}
               >
                 <div
                   style={{
                     background: 'rgba(20, 19, 17, 0.8)',
-                    padding: '8px 10px',
+                    padding: '6px 10px',
                     borderRadius: 'var(--radius-xs)',
                     border: '1px solid var(--border-subtle)'
                   }}
@@ -526,8 +890,9 @@ export default function HeroSection({
                   <div
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: '8.5px',
-                      color: 'var(--text-muted)'
+                      fontSize: '8px',
+                      color: 'var(--text-muted)',
+                      letterSpacing: '0.06em'
                     }}
                   >
                     READINESS INDEX
@@ -535,7 +900,7 @@ export default function HeroSection({
                   <div
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: '16px',
+                      fontSize: '15px',
                       fontWeight: 700,
                       color: 'var(--accent-orange)'
                     }}
@@ -547,7 +912,7 @@ export default function HeroSection({
                 <div
                   style={{
                     background: 'rgba(20, 19, 17, 0.8)',
-                    padding: '8px 10px',
+                    padding: '6px 10px',
                     borderRadius: 'var(--radius-xs)',
                     border: '1px solid var(--border-subtle)'
                   }}
@@ -555,8 +920,9 @@ export default function HeroSection({
                   <div
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: '8.5px',
-                      color: 'var(--text-muted)'
+                      fontSize: '8px',
+                      color: 'var(--text-muted)',
+                      letterSpacing: '0.06em'
                     }}
                   >
                     EST. EFFORT
@@ -564,7 +930,7 @@ export default function HeroSection({
                   <div
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: '16px',
+                      fontSize: '15px',
                       fontWeight: 700,
                       color: '#fff'
                     }}
@@ -574,15 +940,15 @@ export default function HeroSection({
                 </div>
               </div>
 
-              {/* Sequential Path Connectors Inspired by Screenshot */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Sequential Path Connectors */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     fontFamily: 'var(--font-mono)',
-                    fontSize: '9.5px',
+                    fontSize: '8.5px',
                     color: 'var(--text-secondary)'
                   }}
                 >
@@ -598,7 +964,7 @@ export default function HeroSection({
                     alignItems: 'center',
                     gap: '4px',
                     background: 'rgba(8, 8, 8, 0.7)',
-                    padding: '8px',
+                    padding: '6px',
                     borderRadius: 'var(--radius-xs)',
                     border: '1px solid var(--border-subtle)'
                   }}
@@ -611,8 +977,8 @@ export default function HeroSection({
                         style={{
                           flex: 1,
                           fontFamily: 'var(--font-mono)',
-                          fontSize: '8.5px',
-                          padding: '4px 2px',
+                          fontSize: '8px',
+                          padding: '3px 2px',
                           textAlign: 'center',
                           borderRadius: '2px',
                           border:
@@ -630,7 +996,7 @@ export default function HeroSection({
                         {stg}
                       </button>
                       {i < 3 && (
-                        <span style={{ color: 'var(--border-medium)', fontSize: '9px' }}>-</span>
+                        <span style={{ color: 'var(--border-medium)', fontSize: '8.5px' }}>-</span>
                       )}
                     </React.Fragment>
                   ))}
@@ -640,13 +1006,13 @@ export default function HeroSection({
               {/* Bottom Live Coordinate Readout */}
               <div
                 style={{
-                  marginTop: '16px',
-                  paddingTop: '10px',
+                  marginTop: '12px',
+                  paddingTop: '8px',
                   borderTop: '1px solid var(--border-subtle)',
                   display: 'flex',
                   justifyContent: 'space-between',
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '8.5px',
+                  fontSize: '8px',
                   color: 'var(--text-muted)'
                 }}
               >
@@ -655,13 +1021,13 @@ export default function HeroSection({
               </div>
             </div>
 
-            {/* Orbiting Satellite Status Tags (Matching Screenshot 1 & 2 aesthetic) */}
+            {/* Orbiting Satellite Status Tags (Anchored securely to apparatus bounds) */}
             <div
-              className="tech-tag orange"
+              className="tech-tag orange hero-satellite-tag hero-satellite-top"
               style={{
                 position: 'absolute',
-                top: '40px',
-                right: '20px',
+                top: '-10px',
+                right: '12px',
                 zIndex: 25
               }}
             >
@@ -669,11 +1035,11 @@ export default function HeroSection({
             </div>
 
             <div
-              className="tech-tag"
+              className="tech-tag hero-satellite-tag hero-satellite-bottom"
               style={{
                 position: 'absolute',
-                bottom: '50px',
-                left: '10px',
+                bottom: '-10px',
+                left: '12px',
                 zIndex: 25
               }}
             >
@@ -681,11 +1047,11 @@ export default function HeroSection({
             </div>
 
             <div
-              className="tech-tag"
+              className="tech-tag hero-satellite-tag hero-satellite-side"
               style={{
                 position: 'absolute',
-                top: '120px',
-                left: '0px',
+                top: '48px',
+                left: '-10px',
                 zIndex: 25
               }}
             >
@@ -696,13 +1062,89 @@ export default function HeroSection({
       </div>
 
       <style>{`
-        @media (max-width: 980px) {
+        .hero-headline {
+          font-family: var(--font-editorial);
+          font-size: clamp(34px, 4.2vw, 68px);
+          font-weight: 900;
+          line-height: 1.02;
+          letter-spacing: -0.025em;
+          text-transform: uppercase;
+          margin-bottom: 22px;
+          overflow-wrap: break-word;
+          word-break: break-word;
+        }
+        .hero-headline-accent-row {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: baseline;
+          column-gap: 0.22em;
+          row-gap: 0;
+        }
+        @media (min-width: 1440px) {
+          .hero-headline {
+            font-size: 68px;
+          }
+        }
+        @media (min-width: 1025px) and (max-width: 1439px) {
+          .hero-headline {
+            font-size: clamp(48px, 4.2vw, 58px);
+          }
+        }
+        @media (min-width: 768px) and (max-width: 1024px) {
+          .hero-headline {
+            font-size: clamp(40px, 4.8vw, 48px);
+          }
+        }
+        @media (max-width: 767px) {
+          .hero-headline {
+            font-size: clamp(32px, 7.8vw, 40px);
+            line-height: 1.06;
+          }
+        }
+        @media (max-width: 1024px) {
           .hero-grid {
             grid-template-columns: 1fr !important;
-            gap: 36px !important;
+            gap: 40px !important;
+          }
+          .hero-left-col {
+            max-width: 640px;
+            margin: 0 auto;
+            width: 100%;
           }
           .hero-visual-stage {
-            min-height: 420px !important;
+            min-height: 440px !important;
+            width: 100%;
+          }
+        }
+        @media (max-width: 640px) {
+          .hero-orbit-ring {
+            display: none !important;
+          }
+          .hero-visual-stage {
+            min-height: auto !important;
+            padding-top: 14px;
+            padding-bottom: 14px;
+          }
+          .hero-satellite-side {
+            left: 4px !important;
+            top: -24px !important;
+          }
+          .hero-satellite-top {
+            right: 4px !important;
+          }
+          .hero-satellite-bottom {
+            left: 4px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .hero-cta-group {
+            flex-direction: column;
+            width: 100%;
+          }
+          .hero-btn-primary, .hero-btn-secondary {
+            width: 100% !important;
+            text-align: center;
+            justify-content: center;
           }
         }
       `}</style>

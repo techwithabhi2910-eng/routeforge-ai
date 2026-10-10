@@ -22,9 +22,13 @@ const nodeTypes = {
 export default function BuildSection({
   selectedRouteId,
   milestones,
-  onToggleMilestoneComplete
+  onToggleMilestoneComplete,
+  routeConfigs = ROUTE_CONFIGS,
+  customEdges,
+  isLiveGenerated = false,
+  roadmapNote = ''
 }) {
-  const currentRoute = ROUTE_CONFIGS[selectedRouteId] || ROUTE_CONFIGS['fastest'];
+  const currentRoute = routeConfigs[selectedRouteId] || ROUTE_CONFIGS[selectedRouteId] || ROUTE_CONFIGS['fastest'];
   const [selectedMilestoneId, setSelectedMilestoneId] = useState(milestones[0]?.id || null);
   const [viewMode, setViewMode] = useState('graph'); // 'graph' or 'timeline'
 
@@ -41,8 +45,34 @@ export default function BuildSection({
     }));
   }, [milestones, onToggleMilestoneComplete]);
 
-  // Build ReactFlow Edges
+  // Build ReactFlow Edges (supports custom backend edges or linear fallback)
   const initialEdges = useMemo(() => {
+    if (customEdges && customEdges.length > 0) {
+      return customEdges.map((e) => {
+        const sourceNode = milestones.find((m) => m.id === e.source);
+        const isSourceDone = sourceNode?.status === 'completed';
+        const isSourceActive = sourceNode?.status === 'active';
+
+        return {
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          animated: isSourceDone || isSourceActive,
+          style: {
+            stroke: isSourceDone ? '#ff6a00' : 'rgba(220, 210, 195, 0.25)',
+            strokeWidth: isSourceDone ? 2 : 1.5,
+            strokeDasharray: isSourceDone ? 'none' : '4, 4'
+          },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: isSourceDone ? '#ff6a00' : 'rgba(220, 210, 195, 0.4)',
+            width: 14,
+            height: 14
+          }
+        };
+      });
+    }
+
     const edges = [];
     for (let i = 0; i < milestones.length - 1; i++) {
       const source = milestones[i];
@@ -68,7 +98,7 @@ export default function BuildSection({
       });
     }
     return edges;
-  }, [milestones]);
+  }, [milestones, customEdges]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -127,6 +157,14 @@ export default function BuildSection({
             >
               <span style={{ color: 'var(--accent-orange)' }}>//</span>
               <span>SECTION 04 — INTERACTIVE FORGE GRAPH</span>
+              {isLiveGenerated && (
+                <span
+                  className="tech-tag active"
+                  style={{ fontSize: '8.5px', padding: '1px 6px', color: '#00ff88', borderColor: 'rgba(0, 255, 136, 0.4)' }}
+                >
+                  LIVE GEMINI DAG
+                </span>
+              )}
             </div>
 
             <h2

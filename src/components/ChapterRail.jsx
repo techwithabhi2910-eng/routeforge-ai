@@ -18,7 +18,8 @@ export default function ChapterRail({ activeSection }) {
         width: '100%',
         maxWidth: 'var(--container-max)',
         margin: '0 auto',
-        padding: '0 24px',
+        padding: '0 clamp(16px, 3vw, 32px)',
+        boxSizing: 'border-box',
         position: 'relative',
         zIndex: 40
       }}

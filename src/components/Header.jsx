@@ -1,15 +1,29 @@
 import React, { useState } from 'react';
-import { Menu, X, ArrowUpRight, Compass, Layers, GitBranch, Crosshair, ChevronDown } from 'lucide-react';
+import { Menu, X, ArrowUpRight, Compass, Layers, Sparkles, RotateCcw, Eye } from 'lucide-react';
 
-export default function Header({ onOpenBuilder }) {
+export default function Header({
+  currentStep = 1,
+  maxStepReached = 1,
+  onSelectStep,
+  isAdvancedMode = false,
+  onToggleAdvancedMode,
+  onResetJourney
+}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [pathsDropdownOpen, setPathsDropdownOpen] = useState(false);
+
+  const navItems = [
+    { step: 1, label: '1. Destination' },
+    { step: 2, label: '2. Your Skills' },
+    { step: 3, label: '3. Skill Gap' },
+    { step: 4, label: '4. Choose Route' },
+    { step: 5, label: '5. Follow Roadmap' }
+  ];
 
   return (
     <header
       style={{
         height: 'var(--header-height)',
-        background: 'rgba(8, 8, 8, 0.88)',
+        background: 'rgba(8, 8, 8, 0.94)',
         backdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--border-subtle)',
         position: 'sticky',
@@ -19,16 +33,19 @@ export default function Header({ onOpenBuilder }) {
         alignItems: 'center'
       }}
     >
-      <div className="tech-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="tech-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
         {/* Brand */}
-        <a
-          href="#section-discover"
+        <button
+          type="button"
+          onClick={() => onSelectStep ? onSelectStep(1) : null}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
-            textDecoration: 'none',
-            color: 'var(--text-primary)'
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0
           }}
         >
           {/* Circular orange symbol with technical dots */}
@@ -80,127 +97,96 @@ export default function Header({ onOpenBuilder }) {
               AI
             </span>
           </div>
-        </a>
+        </button>
 
-        {/* Center Navigation for Desktop */}
+        {/* Center Stage Quick Nav (Desktop) */}
         <nav
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '20px'
+            gap: 'clamp(8px, 1.2vw, 16px)'
           }}
           className="header-desktop-nav"
         >
-          {/* Framed workspace badge inspired by reference */}
-          <a
-            href="#section-build"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              padding: '4px 10px',
-              border: '1px solid var(--border-medium)',
-              borderRadius: 'var(--radius-xs)',
-              color: 'var(--text-primary)',
-              textDecoration: 'none',
-              background: 'rgba(220, 210, 195, 0.04)',
-              transition: 'all var(--transition-fast)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--accent-orange)';
-              e.currentTarget.style.color = 'var(--accent-orange)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-medium)';
-              e.currentTarget.style.color = 'var(--text-primary)';
-            }}
-          >
-            <Layers size={12} style={{ color: 'var(--accent-orange)' }} />
-            <span>ROADMAP WORKSPACE</span>
-          </a>
-
-          <a href="#section-discover" className="nav-link">
-            Explore
-          </a>
-          <a href="#section-analyze" className="nav-link">
-            How It Works
-          </a>
-
-          {/* Paths Dropdown */}
-          <div
-            style={{ position: 'relative' }}
-            onMouseEnter={() => setPathsDropdownOpen(true)}
-            onMouseLeave={() => setPathsDropdownOpen(false)}
-          >
-            <a
-              href="#section-compare"
-              className="nav-link"
-              style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-            >
-              <span>Career Paths</span>
-              <ChevronDown size={11} style={{ opacity: 0.6 }} />
-            </a>
-
-            {pathsDropdownOpen && (
-              <div
+          {navItems.map((item) => {
+            const isAccessible = item.step <= maxStepReached;
+            const isCurrent = currentStep === item.step;
+            return (
+              <button
+                key={item.step}
+                type="button"
+                disabled={!isAccessible}
+                onClick={() => isAccessible && onSelectStep(item.step)}
                 style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  width: '240px',
-                  background: 'var(--bg-surface-elevated)',
-                  border: '1px solid var(--border-medium)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '8px',
-                  marginTop: '6px',
-                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.8)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  zIndex: 200
+                  background: 'none',
+                  border: 'none',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '11px',
+                  fontWeight: isCurrent ? 700 : 500,
+                  color: isCurrent
+                    ? 'var(--accent-orange)'
+                    : isAccessible
+                    ? 'var(--text-secondary)'
+                    : 'var(--text-dim)',
+                  cursor: isAccessible ? 'pointer' : 'not-allowed',
+                  padding: '4px 6px',
+                  borderBottom: isCurrent ? '1.5px solid var(--accent-orange)' : '1.5px solid transparent',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <a href="#section-compare" className="dropdown-link">
-                  <span className="dropdown-title">Fastest Route</span>
-                  <span className="dropdown-desc">16 weeks • Sprint prerequisite</span>
-                </a>
-                <a href="#section-compare" className="dropdown-link">
-                  <span className="dropdown-title">Budget-Friendly Route</span>
-                  <span className="dropdown-desc">26 weeks • $0 Zero-cost OSS</span>
-                </a>
-                <a href="#section-compare" className="dropdown-link">
-                  <span className="dropdown-title">Portfolio-First Route</span>
-                  <span className="dropdown-desc">22 weeks • Proof-of-work</span>
-                </a>
-              </div>
-            )}
-          </div>
-
-          <a href="#section-track" className="nav-link">
-            My Progress
-          </a>
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
 
-        {/* Right CTA */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            type="button"
-            onClick={onOpenBuilder}
-            className="tech-btn"
-            style={{
-              borderColor: 'var(--border-orange-dim)',
-              color: 'var(--text-primary)',
-              background: 'rgba(255, 106, 0, 0.08)'
-            }}
-          >
-            <span style={{ color: 'var(--accent-orange)' }}>••</span>
-            <span>BUILD MY ROADMAP</span>
-            <ArrowUpRight size={13} style={{ color: 'var(--accent-orange)' }} />
-          </button>
+        {/* Right CTA & Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Optional Advanced View Toggle */}
+          {onToggleAdvancedMode && (
+            <button
+              type="button"
+              onClick={onToggleAdvancedMode}
+              title="Toggle all panels overview"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '10.5px',
+                padding: '6px 10px',
+                background: isAdvancedMode ? 'rgba(255, 106, 0, 0.15)' : 'rgba(25, 23, 21, 0.6)',
+                border: isAdvancedMode ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
+                borderRadius: 'var(--radius-xs)',
+                color: isAdvancedMode ? 'var(--accent-orange)' : 'var(--text-muted)',
+                cursor: 'pointer'
+              }}
+            >
+              <Eye size={12} />
+              <span className="advanced-toggle-text">
+                {isAdvancedMode ? 'Guided Journey' : 'All Panels'}
+              </span>
+            </button>
+          )}
+
+          {/* New Journey / Restart */}
+          {onResetJourney && (
+            <button
+              type="button"
+              onClick={onResetJourney}
+              className="tech-btn sm"
+              style={{
+                fontSize: '10.5px',
+                padding: '6px 10px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              <RotateCcw size={11} />
+              <span>New Path</span>
+            </button>
+          )}
 
           {/* Mobile Menu Toggle */}
           <button
@@ -214,6 +200,10 @@ export default function Header({ onOpenBuilder }) {
               color: 'var(--text-primary)',
               cursor: 'pointer',
               display: 'none',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '34px',
+              height: '34px',
               padding: '6px'
             }}
             className="header-mobile-toggle"
@@ -236,115 +226,73 @@ export default function Header({ onOpenBuilder }) {
             padding: '20px 24px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '14px',
+            gap: '12px',
             zIndex: 100
           }}
         >
-          <a
-            href="#section-discover"
-            className="mobile-nav-link"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            01 / Explore Target Role
-          </a>
-          <a
-            href="#section-analyze"
-            className="mobile-nav-link"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            02 / Analyze Skill Distance
-          </a>
-          <a
-            href="#section-compare"
-            className="mobile-nav-link"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            03 / Compare 3 Alternative Routes
-          </a>
-          <a
-            href="#section-build"
-            className="mobile-nav-link"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            04 / Interactive Roadmap Graph
-          </a>
-          <a
-            href="#section-track"
-            className="mobile-nav-link"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            05 / Track Progress & Evidence
-          </a>
+          {navItems.map((item) => {
+            const isAccessible = item.step <= maxStepReached;
+            const isCurrent = currentStep === item.step;
+            return (
+              <button
+                key={item.step}
+                type="button"
+                disabled={!isAccessible}
+                onClick={() => {
+                  if (isAccessible) {
+                    onSelectStep(item.step);
+                    setMobileMenuOpen(false);
+                  }
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  textAlign: 'left',
+                  padding: '8px 0',
+                  borderBottom: '1px solid var(--border-subtle)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '12px',
+                  color: isCurrent
+                    ? 'var(--accent-orange)'
+                    : isAccessible
+                    ? '#fff'
+                    : 'var(--text-muted)',
+                  cursor: isAccessible ? 'pointer' : 'not-allowed'
+                }}
+              >
+                {item.label} {isCurrent && ' (Active)'}
+              </button>
+            );
+          })}
 
-          <div style={{ paddingTop: '8px', borderTop: '1px solid var(--border-subtle)' }}>
+          <div style={{ paddingTop: '8px' }}>
             <button
               type="button"
               onClick={() => {
                 setMobileMenuOpen(false);
-                onOpenBuilder();
+                if (onResetJourney) onResetJourney();
               }}
               className="tech-btn primary"
               style={{ width: '100%', justifyContent: 'center' }}
             >
-              BUILD MY ROADMAP ↗
+              Start New Journey ↗
             </button>
           </div>
         </div>
       )}
 
       <style>{`
-        .nav-link {
-          font-family: var(--font-mono);
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--text-secondary);
-          text-decoration: none;
-          transition: color var(--transition-fast);
-        }
-        .nav-link:hover {
-          color: var(--accent-orange);
-        }
-        .dropdown-link {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          padding: 8px 10px;
-          border-radius: var(--radius-xs);
-          text-decoration: none;
-          transition: background var(--transition-fast);
-        }
-        .dropdown-link:hover {
-          background: rgba(255, 106, 0, 0.1);
-        }
-        .dropdown-title {
-          font-family: var(--font-mono);
-          font-size: 11.5px;
-          font-weight: 600;
-          color: var(--text-primary);
-        }
-        .dropdown-desc {
-          font-family: var(--font-mono);
-          font-size: 10px;
-          color: var(--text-muted);
-        }
-        .mobile-nav-link {
-          font-family: var(--font-mono);
-          font-size: 12px;
-          color: var(--text-primary);
-          text-decoration: none;
-          padding: 8px 0;
-          border-bottom: 1px solid var(--border-subtle);
-        }
-        .mobile-nav-link:hover {
-          color: var(--accent-orange);
-        }
-        @media (max-width: 860px) {
+        @media (max-width: 900px) {
           .header-desktop-nav {
             display: none !important;
           }
           .header-mobile-toggle {
             display: flex !important;
+          }
+        }
+        @media (max-width: 500px) {
+          .advanced-toggle-text {
+            display: none;
           }
         }
       `}</style>

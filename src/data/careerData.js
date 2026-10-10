@@ -3,34 +3,63 @@
 
 export const INITIAL_ROLES = [
   {
-    id: 'staff-ai-engineer',
-    title: 'Staff AI Engineer',
+    id: 'ai-engineer',
+    title: 'AI Engineer',
     category: 'Artificial Intelligence & Systems',
     description: 'Designs enterprise-grade autonomous agent architectures, fine-tunes LLMs, and deploys high-throughput distributed inference pipelines.',
-    baseReadiness: 38,
-    estTotalHours: 480,
-    salaryBenchmark: '$210k — $290k / yr',
-    demandIndex: 'Critical (Top 1%)'
-  },
-  {
-    id: 'fullstack-tech-lead',
-    title: 'Full-Stack Tech Lead',
-    category: 'Distributed Systems & Web',
-    description: 'Architects multi-region web applications, guides engineering teams, leads API design, and guarantees 99.99% system resilience.',
-    baseReadiness: 45,
+    baseReadiness: 35,
     estTotalHours: 420,
-    salaryBenchmark: '$185k — $250k / yr',
-    demandIndex: 'Very High'
+    salaryBenchmark: '$150k — $230k / yr',
+    demandIndex: 'Critical',
+    suggestedSkills: [
+      'Python', 'PyTorch / TensorFlow', 'Vector Databases & RAG', 'LangChain / LlamaIndex',
+      'FastAPI / REST APIs', 'Docker & Containerization', 'Git & CI/CD', 'Prompt Engineering & Evaluation'
+    ]
   },
   {
-    id: 'cloud-solutions-architect',
-    title: 'Cloud Solutions Architect',
-    category: 'Cloud & Infrastructure',
-    description: 'Designs zero-trust cloud architectures, orchestrates Kubernetes clusters, and implements multi-cloud disaster recovery.',
-    baseReadiness: 30,
-    estTotalHours: 520,
-    salaryBenchmark: '$190k — $260k / yr',
-    demandIndex: 'High'
+    id: 'cybersecurity-analyst',
+    title: 'Cybersecurity Analyst',
+    category: 'Information Security & Operations',
+    description: 'Monitors threat vectors, conducts vulnerability assessments, investigates security incidents, and enforces zero-trust architecture.',
+    baseReadiness: 28,
+    estTotalHours: 380,
+    salaryBenchmark: '$110k — $165k / yr',
+    demandIndex: 'Very High',
+    suggestedSkills: [
+      'Network Security & TCP/IP', 'Linux System Administration', 'Wireshark & Packet Analysis',
+      'SIEM Tools (Splunk / Elastic)', 'Python for Security Automation', 'OWASP Top 10 & Web Security',
+      'Incident Response & Forensics', 'Git & Infrastructure Security'
+    ]
+  },
+  {
+    id: 'fullstack-developer',
+    title: 'Full-Stack Developer',
+    category: 'Distributed Systems & Web',
+    description: 'Creates responsive frontend user experiences, engineers robust backend microservices, and manages database systems with automated CI/CD.',
+    baseReadiness: 42,
+    estTotalHours: 400,
+    salaryBenchmark: '$120k — $180k / yr',
+    demandIndex: 'High',
+    suggestedSkills: [
+      'JavaScript & TypeScript', 'React / Next.js', 'Node.js & Express / FastAPI',
+      'PostgreSQL & Database Design', 'REST & GraphQL APIs', 'Docker & Cloud Deployment',
+      'Git & GitHub Actions', 'Tailwind CSS & Responsive UI'
+    ]
+  },
+  {
+    id: 'data-analyst',
+    title: 'Data Analyst',
+    category: 'Business Intelligence & Analytics',
+    description: 'Transforms raw operational datasets into strategic executive insights, builds interactive BI dashboards, and tests statistical hypotheses.',
+    baseReadiness: 45,
+    estTotalHours: 320,
+    salaryBenchmark: '$85k — $135k / yr',
+    demandIndex: 'High',
+    suggestedSkills: [
+      'SQL (Complex Joins & Windows)', 'Python (pandas, NumPy)', 'Tableau / Power BI Dashboards',
+      'Excel & Financial Modeling', 'Statistical Hypothesis Testing', 'Data Cleaning & Transformation',
+      'Data Storytelling & Executive Reports', 'Git & Version Control'
+    ]
   }
 ];
 
@@ -557,3 +586,22 @@ export function calculateTelemetry(categories, milestones) {
     overallReadiness
   };
 }
+
+/**
+ * Returns a list of default skill suggestions based on role
+ */
+export function getSuggestedSkillsForRole(roleTitle = '') {
+  const normalized = (roleTitle || '').toLowerCase();
+  const matched = INITIAL_ROLES.find(r =>
+    normalized.includes(r.title.toLowerCase()) || r.title.toLowerCase().includes(normalized)
+  );
+  if (matched?.suggestedSkills) {
+    return matched.suggestedSkills;
+  }
+  // Generic fallback skills
+  return [
+    'Python', 'JavaScript', 'Git & GitHub', 'Docker', 'SQL & Databases',
+    'REST APIs', 'Cloud Computing (AWS / GCP)', 'System Design Basics'
+  ];
+}
+

@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, CheckCircle2, Circle, GitBranch, HelpCircle, Code2, ArrowUpRight, Award } from 'lucide-react';
+import { X, Code2, HelpCircle } from 'lucide-react';
+import LumiMascot from './LumiMascot';
 
 const GithubIcon = ({ size = 14 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -104,12 +105,13 @@ export default function MilestoneInspector({ milestone, onClose, onToggleComplet
           marginBottom: '20px'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {isCompleted ? (
-            <CheckCircle2 size={18} style={{ color: 'var(--accent-orange)' }} />
-          ) : (
-            <Circle size={18} style={{ color: 'var(--text-muted)' }} />
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <LumiMascot
+            state={isCompleted ? 'celebrate' : 'working'}
+            size={42}
+            interactive={false}
+            ariaLabel={isCompleted ? 'Lumi celebrating milestone completion' : 'Lumi in working state'}
+          />
           <div>
             <div
               style={{
