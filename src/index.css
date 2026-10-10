@@ -1,0 +1,387 @@
+/* ==========================================================================
+   ROUTEFORGE AI — AGENT AI INSPIRED TECHNICAL DESIGN SYSTEM
+   ========================================================================== */
+
+:root {
+  /* Color Palette */
+  --bg-base: #080808;
+  --bg-surface: #0d0c0b;
+  --bg-surface-elevated: #131210;
+  --bg-surface-hover: #191715;
+  --bg-card: #0f0e0d;
+  
+  --accent-orange: #ff6a00;
+  --accent-orange-bright: #ff7d1a;
+  --accent-orange-muted: rgba(255, 106, 0, 0.12);
+  --accent-orange-subtle: rgba(255, 106, 0, 0.05);
+  --accent-orange-glow: rgba(255, 106, 0, 0.4);
+  
+  --text-primary: #f0efeb;
+  --text-secondary: #a5a09a;
+  --text-muted: #65605a;
+  --text-dim: #433f3a;
+  
+  --border-subtle: rgba(220, 210, 195, 0.12);
+  --border-medium: rgba(220, 210, 195, 0.22);
+  --border-active: rgba(255, 106, 0, 0.85);
+  --border-orange-dim: rgba(255, 106, 0, 0.3);
+  
+  --grid-line: rgba(220, 210, 195, 0.04);
+  --grid-line-strong: rgba(220, 210, 195, 0.08);
+
+  /* Fonts */
+  --font-editorial: 'Syne', 'Space Grotesk', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Dimensions & Spacing */
+  --header-height: 56px;
+  --announcement-height: 32px;
+  --container-max: 1360px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  /* Motion & Easing */
+  --ease-technical: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 150ms var(--ease-technical);
+  --transition-normal: 250ms var(--ease-technical);
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-orange);
+  color: #000;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(220, 210, 195, 0.16);
+  border-radius: var(--radius-xs);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-orange);
+}
+
+/* Technical Typography Classes */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.font-editorial {
+  font-family: var(--font-editorial);
+}
+
+.tracking-technical {
+  letter-spacing: 0.12em;
+}
+
+.tracking-editorial {
+  letter-spacing: -0.03em;
+}
+
+.text-orange {
+  color: var(--accent-orange);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* Technical Grid Lines Overlay */
+.technical-grid-bg {
+  background-size: 48px 48px;
+  background-image: 
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+}
+
+.technical-vertical-rails {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--container-max);
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+}
+
+.technical-rail-line {
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--grid-line-strong) 5%,
+    var(--grid-line-strong) 95%,
+    transparent
+  );
+}
+
+/* Technical UI Components */
+.tech-container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 2;
+}
+
+.tech-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+  background: rgba(13, 12, 11, 0.7);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.tech-tag.orange {
+  border-color: var(--border-orange-dim);
+  color: var(--accent-orange);
+  background: var(--accent-orange-subtle);
+}
+
+.tech-tag.active {
+  border-color: var(--accent-orange);
+  color: #fff;
+  background: var(--accent-orange);
+}
+
+/* Technical Outlined Buttons */
+.tech-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 10px 18px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  position: relative;
+  white-space: nowrap;
+}
+
+.tech-btn:hover {
+  border-color: var(--accent-orange);
+  color: var(--accent-orange);
+  background: rgba(255, 106, 0, 0.06);
+}
+
+.tech-btn.primary {
+  border-color: var(--accent-orange);
+  color: #080808;
+  background: var(--accent-orange);
+}
+
+.tech-btn.primary:hover {
+  background: var(--accent-orange-bright);
+  color: #000;
+  box-shadow: 0 0 20px rgba(255, 106, 0, 0.4);
+}
+
+.tech-btn.sm {
+  padding: 6px 12px;
+  font-size: 10.5px;
+}
+
+/* Technical Panels */
+.tech-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  position: relative;
+  transition: border-color var(--transition-normal);
+}
+
+.tech-panel:hover {
+  border-color: var(--border-medium);
+}
+
+.tech-panel.active {
+  border-color: var(--border-active);
+  background: var(--bg-surface-elevated);
+}
+
+/* Corner Reticle Ticks */
+.tech-corner-box {
+  position: relative;
+}
+
+.tech-corner-box::before,
+.tech-corner-box::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  pointer-events: none;
+}
+
+.tech-corner-box::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1.5px solid var(--accent-orange);
+  border-left: 1.5px solid var(--accent-orange);
+}
+
+.tech-corner-box::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1.5px solid var(--accent-orange);
+  border-right: 1.5px solid var(--accent-orange);
+}
+
+/* Animations */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 35s linear infinite;
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 25s linear infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+/* XYFlow (React Flow) Dark Technical Overrides */
+.react-flow {
+  background-color: #090908 !important;
+}
+
+.react-flow__background-pattern {
+  stroke: rgba(220, 210, 195, 0.08) !important;
+}
+
+.react-flow__edge-path {
+  stroke: var(--accent-orange) !important;
+  stroke-width: 1.8 !important;
+  stroke-dasharray: 4, 4;
+  animation: flow-dash 1.5s linear infinite;
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -8;
+  }
+}
+
+.react-flow__controls {
+  border: 1px solid var(--border-subtle) !important;
+  background: var(--bg-surface) !important;
+  border-radius: var(--radius-xs) !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  background: var(--bg-surface) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  color: var(--text-secondary) !important;
+  fill: var(--text-secondary) !important;
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--bg-surface-hover) !important;
+  color: var(--accent-orange) !important;
+  fill: var(--accent-orange) !important;
+}
+
+.react-flow__handle {
+  width: 8px !important;
+  height: 8px !important;
+  background: var(--accent-orange) !important;
+  border: 1.5px solid #080808 !important;
+  border-radius: 50% !important;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

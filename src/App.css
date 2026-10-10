@@ -1,0 +1,5 @@
+/* App scoped layout utilities */
+.app-viewport {
+  position: relative;
+  width: 100%;
+}
